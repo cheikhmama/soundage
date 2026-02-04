@@ -1,0 +1,17 @@
+/* Tailwind handles layout; sidebar mobile uses fixed + overlay */
+
+/* Ensure sidebar nav links are visible */
+aside nav a,
+#default-sidebar ul a {
+  display: flex;
+}
+
+/* Active nav link: white text and icon for contrast on blue background */
+:host ::ng-deep #default-sidebar a.router-link-active,
+:host ::ng-deep #default-sidebar a.router-link-active span,
+:host ::ng-deep #default-sidebar a.router-link-active svg {
+  color: white !important;
+}
+:host ::ng-deep #default-sidebar a.router-link-active svg path {
+  stroke: white !important;
+}

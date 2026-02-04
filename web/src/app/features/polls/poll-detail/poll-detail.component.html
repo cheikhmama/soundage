@@ -1,0 +1,163 @@
+<div class="max-w-2xl mx-auto">
+  @if (loading) {
+    <div class="rounded-xl border border-slate-200 bg-white p-8 animate-pulse space-y-6">
+      <div class="h-8 bg-slate-200 rounded w-2/3"></div>
+      <div class="h-4 bg-slate-100 rounded w-full"></div>
+      <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+      <div class="h-24 bg-slate-100 rounded"></div>
+      <div class="h-10 bg-slate-200 rounded w-28"></div>
+    </div>
+  } @else if (error && !poll()) {
+    <div class="rounded-xl border border-slate-200 bg-white p-8 text-center">
+      <p class="text-red-600 mb-4">{{ error }}</p>
+      <a routerLink="/polls" class="text-blue-600 font-medium hover:underline">Back to polls</a>
+    </div>
+  } @else if (submitted) {
+    <div class="rounded-xl border border-slate-200 bg-white p-8 text-center">
+      <div class="text-5xl mb-4">✓</div>
+      <h2 class="text-xl font-semibold text-slate-900 mb-2">Thank you!</h2>
+      <p class="text-slate-600 mb-6">{{ submitMessage || 'Your vote has been recorded.' }}</p>
+      <a
+        routerLink="/polls"
+        class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        Back to polls
+      </a>
+    </div>
+  } @else if (poll(); as p) {
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-slate-200">
+        <h1 class="text-2xl font-semibold text-slate-900">{{ p.title }}</h1>
+        @if (p.description) {
+          <p class="text-slate-600 mt-2">{{ p.description }}</p>
+        }
+      </div>
+
+      @if (!canVote(p)) {
+        <div class="p-6 bg-slate-100 border-t border-slate-200 text-center">
+          <p class="font-medium text-slate-700">Voting is closed</p>
+          <p class="text-sm text-slate-600 mt-1">This poll is not accepting votes. You cannot vote or change your vote when the poll is closed.</p>
+        </div>
+      } @else if (p.hasVoted) {
+        <div class="p-6 bg-emerald-50 border-t border-emerald-200 text-center">
+          <p class="font-medium text-emerald-800">You have already voted</p>
+          <p class="text-sm text-emerald-700 mt-1">Thank you for participating. The vote form is not available because you have already submitted your vote for this poll.</p>
+          <a
+            routerLink="/polls"
+            class="inline-flex items-center justify-center mt-4 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            Back to polls
+          </a>
+        </div>
+      } @else {
+        <p class="px-6 text-sm text-slate-500">One vote per person (per poll). Submitting again will replace your previous vote.</p>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
+          <div formArrayName="answers">
+            @if (error) {
+              <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm mb-6">{{ error }}</div>
+            }
+
+            @for (q of questions(); track q.id; let qi = $index) {
+              <div [formGroupName]="qi" class="space-y-3 mb-6">
+                <label class="block text-sm font-medium text-slate-900">
+                  {{ q.title }}
+                  @if (q.isRequired) {
+                    <span class="text-red-500">*</span>
+                  }
+                </label>
+
+                @if (isSingleChoice(q.type)) {
+                  <div class="space-y-2" [class.poll-options-grid]="hasImageOptions(q.options)">
+                    @for (opt of q.options; track opt.id) {
+                      <label class="poll-option-card flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
+                        [class.poll-option-card--image]="opt.imageUrl"
+                        [class.border-blue-600]="opt.imageUrl && answers.at(qi).value.optionId === opt.id"
+                        [class.bg-blue-50]="opt.imageUrl && answers.at(qi).value.optionId === opt.id">
+                        <input
+                          type="radio"
+                          [name]="'q_' + q.id"
+                          [value]="opt.id"
+                          (change)="onSingleSelect(qi, opt.id)"
+                        />
+                        @if (opt.imageUrl) {
+                          <img [src]="opt.imageUrl" [alt]="opt.textContent ?? 'Option'" class="poll-option-img rounded-lg object-cover flex-shrink-0" />
+                        }
+                        <span class="text-slate-800">{{ opt.textContent ?? opt.id }}</span>
+                      </label>
+                    }
+                  </div>
+                }
+
+                @if (isMultipleChoice(q.type)) {
+                  <div class="space-y-2" [class.poll-options-grid]="hasImageOptions(q.options)">
+                    @for (opt of q.options; track opt.id) {
+                      <label class="poll-option-card flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
+                        [class.poll-option-card--image]="opt.imageUrl"
+                        [class.border-blue-600]="opt.imageUrl && answers.at(qi).value.optionIds?.includes(opt.id)"
+                        [class.bg-blue-50]="opt.imageUrl && answers.at(qi).value.optionIds?.includes(opt.id)">
+                        <input
+                          type="checkbox"
+                          [checked]="answers.at(qi).value.optionIds?.includes(opt.id)"
+                          (change)="onMultipleToggle(qi, opt.id, $any($event.target).checked)"
+                        />
+                        @if (opt.imageUrl) {
+                          <img [src]="opt.imageUrl" [alt]="opt.textContent ?? 'Option'" class="poll-option-img rounded-lg object-cover flex-shrink-0" />
+                        }
+                        <span class="text-slate-800">{{ opt.textContent ?? opt.id }}</span>
+                      </label>
+                    }
+                  </div>
+                }
+
+                @if (isText(q.type)) {
+                  <textarea
+                    formControlName="textValue"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Your answer..."
+                  ></textarea>
+                }
+
+                @if (isRating(q.type)) {
+                  <div class="flex flex-wrap gap-2">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <button
+                        type="button"
+                        (click)="answers.at(qi).patchValue({ numericValue: star })"
+                        class="w-10 h-10 rounded-lg border text-sm font-medium transition-colors"
+                        [class.bg-blue-600]="answers.at(qi).value.numericValue === star"
+                        [class.text-white]="answers.at(qi).value.numericValue === star"
+                        [class.border-blue-600]="answers.at(qi).value.numericValue === star"
+                        [class.bg-white]="answers.at(qi).value.numericValue !== star"
+                        [class.text-slate-700]="answers.at(qi).value.numericValue !== star"
+                        [class.border-slate-300]="answers.at(qi).value.numericValue !== star"
+                      >
+                        {{ star }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="pt-4 flex flex-col sm:flex-row gap-3">
+            <button
+              type="submit"
+              [disabled]="submitLoading || !canVote(p) || p.hasVoted"
+              class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {{ submitLoading ? 'Submitting…' : 'Submit vote' }}
+            </button>
+            <a
+              routerLink="/polls"
+              class="inline-flex items-center justify-center px-5 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50"
+            >
+              Cancel
+            </a>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</div>

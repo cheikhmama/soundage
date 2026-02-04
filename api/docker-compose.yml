@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: soundage-db
+    env_file:
+      - db.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soundage -d soundage"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  adminer:
+    image: adminer
+    container_name: soundage-adminer
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: soundage-api
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - app.env
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/soundage
+      - SPRING_DATASOURCE_USERNAME=soundage
+      - SPRING_DATASOURCE_PASSWORD=soundage
+    restart: unless-stopped
+
+volumes:
+  db_data:
+

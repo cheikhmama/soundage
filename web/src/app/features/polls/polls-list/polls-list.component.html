@@ -1,0 +1,56 @@
+<div class="space-y-4">
+  <div>
+    <h1 class="text-2xl font-semibold text-slate-900">Polls</h1>
+    <p class="text-slate-500 text-sm mt-1">Vote on active polls.</p>
+  </div>
+
+  @if (error) {
+    <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">{{ error }}</div>
+  } @else if (loading) {
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="rounded-xl border border-slate-200 bg-white p-5 animate-pulse">
+          <div class="h-5 bg-slate-200 rounded w-3/4 mb-3"></div>
+          <div class="h-4 bg-slate-100 rounded w-full mb-2"></div>
+          <div class="h-4 bg-slate-100 rounded w-2/3 mb-4"></div>
+          <div class="h-10 bg-slate-200 rounded w-24"></div>
+        </div>
+      }
+    </div>
+  } @else if (polls.length === 0) {
+    <div class="rounded-xl border border-slate-200 bg-white p-12 text-center text-slate-500">
+      No active polls at the moment. Check back later.
+    </div>
+  } @else {
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (poll of polls; track poll.id) {
+        <div
+          class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-shadow hover:shadow-md"
+        >
+          <div class="p-5">
+            <h2 class="text-lg font-semibold text-slate-900 mb-2">{{ poll.title }}</h2>
+            @if (poll.description) {
+              <p class="text-sm text-slate-600 line-clamp-2 mb-4">{{ poll.description }}</p>
+            }
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 mb-4">
+              <span>Starts: {{ formatDate(poll.startsAt) }}</span>
+              <span>Ends: {{ formatDate(poll.endsAt) }}</span>
+            </div>
+            @if (canVote(poll)) {
+              <a
+                [routerLink]="['/polls', poll.id]"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Vote
+              </a>
+            } @else {
+              <span class="inline-flex items-center px-4 py-2.5 bg-slate-100 text-slate-500 text-sm font-medium rounded-lg cursor-not-allowed">
+                {{ pollStatusLabel(poll) }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

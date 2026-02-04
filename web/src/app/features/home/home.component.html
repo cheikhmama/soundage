@@ -1,0 +1,204 @@
+<div class="dashboard">
+  <!-- Welcome -->
+ 
+
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="stats-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="stat-card stat-card-skeleton">
+          <div class="stat-icon skeleton"></div>
+          <div class="stat-content">
+            <div class="skeleton h-4 w-24 mb-2"></div>
+            <div class="skeleton h-8 w-16"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Stats -->
+    <section class="stats-grid">
+      <div class="stat-card stat-card-blue">
+        <div class="stat-icon stat-icon-blue">
+          <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total polls</p>
+          <p class="stat-value">{{ stats().totalPolls }}</p>
+        </div>
+      </div>
+      <div class="stat-card stat-card-emerald">
+        <div class="stat-icon stat-icon-emerald">
+          <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Active (open)</p>
+          <p class="stat-value">{{ stats().activePolls }}</p>
+        </div>
+      </div>
+      <div class="stat-card stat-card-amber">
+        <div class="stat-icon stat-icon-amber">
+          <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Ended</p>
+          <p class="stat-value">{{ stats().endedPolls }}</p>
+        </div>
+      </div>
+      @if (isAdmin()) {
+        <div class="stat-card stat-card-violet">
+          <div class="stat-icon stat-icon-violet">
+            <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </div>
+          <div class="stat-content">
+            <p class="stat-label">Total users</p>
+            <p class="stat-value">{{ stats().totalUsers }}</p>
+          </div>
+        </div>
+      } @else {
+        <div class="stat-card stat-card-slate">
+          <div class="stat-icon stat-icon-slate">
+            <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="stat-content">
+            <p class="stat-label">Not started</p>
+            <p class="stat-value">{{ stats().notStartedPolls }}</p>
+          </div>
+        </div>
+      }
+    </section>
+
+    <!-- Charts row -->
+    <section class="charts-row">
+      <!-- Horizontal bar chart: Poll status -->
+      <div class="chart-card">
+        <h2 class="chart-title">Polls by status</h2>
+        <div class="bar-chart-vertical">
+          @if (statusBarData().length === 0) {
+            <p class="chart-empty">No poll data yet.</p>
+          } @else {
+            @for (item of statusBarData(); track item.label) {
+              <div class="bar-row">
+                <span class="bar-label">{{ item.label }}</span>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="item.percentage" [style.background]="item.color"></div>
+                </div>
+                <span class="bar-value">{{ item.value }} <span class="bar-pct">({{ item.percentage | number:'1.1-1' }}%)</span></span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Donut chart -->
+      <div class="chart-card">
+        <h2 class="chart-title">Status breakdown</h2>
+        <div class="donut-wrap">
+          @if (statusDonutData().length === 0) {
+            <p class="chart-empty">No data.</p>
+          } @else {
+            <div class="donut-container">
+              <div class="donut" [style.background]="donutConicGradient()"></div>
+              <div class="donut-center">
+              <span class="donut-total">{{ stats().totalPolls }}</span>
+              <span class="donut-label">polls</span>
+              </div>
+            </div>
+            <div class="donut-legend">
+              @for (seg of statusDonutData(); track seg.label) {
+                <div class="donut-legend-item">
+                  <span class="donut-legend-dot" [style.background]="seg.color"></span>
+                  <span>{{ seg.label }} ({{ seg.value }})</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Vertical bar chart: Polls per month -->
+    @if (isAdmin() && pollsByMonthData().length > 0) {
+      <section class="chart-card chart-card-full">
+        <h2 class="chart-title">Polls created (last 6 months)</h2>
+        <div class="bars-vertical">
+          @for (item of pollsByMonthData(); track item.month) {
+            <div class="bar-col">
+              <div class="bar-col-fill-wrap" title="{{ item.count }} polls">
+                <div class="bar-col-fill" [style.height.%]="(item.count / maxMonthCount()) * 100"></div>
+              </div>
+              <span class="bar-col-label">{{ item.label }}</span>
+              <span class="bar-col-value">{{ item.count }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Recent polls (admin) -->
+    @if (isAdmin() && recentPolls().length > 0) {
+      <section class="chart-card chart-card-full">
+        <div class="recent-header">
+          <h2 class="chart-title">Recent polls</h2>
+          <a routerLink="/admin/polls" class="link-more">View all</a>
+        </div>
+        <div class="table-wrap">
+          <table class="recent-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of recentPolls(); track p.id) {
+                <tr>
+                  <td class="recent-title">{{ p.title }}</td>
+                  <td>
+                    @switch (getPollStatus(p)) {
+                      @case ('active') {
+                        <span class="status-badge status-active">Active</span>
+                      }
+                      @case ('ended') {
+                        <span class="status-badge status-ended">Ended</span>
+                      }
+                      @case ('not_started') {
+                        <span class="status-badge status-not-started">Not started</span>
+                      }
+                    }
+                  </td>
+                  <td class="recent-date">{{ p.createdAt ? (p.createdAt | date:'short') : '—' }}</td>
+                  <td class="recent-actions">
+                    <a [routerLink]="['/polls', p.id]" class="btn-link" target="_blank">View</a>
+                    <a [routerLink]="['/admin/polls', p.id, 'edit']" class="btn-link">Edit</a>
+                    <a [routerLink]="['/admin/polls', p.id, 'results']" class="btn-link btn-link-primary">Results</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <!-- Quick actions -->
+    <section class="chart-card quick-actions">
+      <h2 class="chart-title">Quick actions</h2>
+      <div class="quick-actions-btns">
+        <a routerLink="/polls" class="btn-primary">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          View polls
+        </a>
+        @if (isAdmin()) {
+          <a routerLink="/admin/polls" class="btn-secondary">Manage polls</a>
+          <a routerLink="/admin/users" class="btn-secondary">Manage users</a>
+        }
+      </div>
+    </section>
+  }
+</div>

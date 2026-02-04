@@ -1,0 +1,24 @@
+# Environment (do not commit – use *.env.example as templates)
+.env
+app.env
+api/.env
+api/*.env
+api/db.env
+api/app.env
+!**/*.env.example
+
+# API (Java/Maven)
+api/target/
+api/.mvn/wrapper/maven-wrapper.jar
+
+# Web (Angular/Node)
+web/node_modules/
+web/dist/
+web/.angular/
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+*.log
+HELP.md

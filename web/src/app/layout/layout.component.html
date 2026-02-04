@@ -1,0 +1,161 @@
+<!-- Mobile sidebar toggle (shown only on small screens) -->
+<button
+  data-drawer-target="default-sidebar"
+  data-drawer-toggle="default-sidebar"
+  aria-controls="default-sidebar"
+  type="button"
+  (click)="toggleSidebar()"
+  class="text-slate-700 bg-transparent border border-slate-300 hover:bg-slate-100 focus:ring-4 focus:ring-slate-200 font-medium leading-5 rounded-lg ms-3 mt-3 text-sm p-2 focus:outline-none inline-flex sm:hidden fixed top-2 left-2 z-50"
+>
+  <span class="sr-only">Open sidebar</span>
+  <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+    <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"/>
+  </svg>
+</button>
+
+<!-- Sidebar -->
+<aside
+  id="default-sidebar"
+  class="fixed top-0 left-0 z-40 w-64 h-full transition-transform -translate-x-full sm:translate-x-0"
+  [class.-translate-x-full]="!sidebarOpen()"
+  [class.translate-x-0]="sidebarOpen()"
+  aria-label="Sidebar"
+>
+  <div class="h-full px-3 py-4 overflow-y-auto bg-gray-100 border-e border-gray-200 flex flex-col">
+    <div class="flex items-center justify-between mb-4">
+      <a routerLink="/polls" class="font-semibold text-lg text-gray-800 hover:text-gray-900 no-underline">Soundage</a>
+      <button
+        type="button"
+        (click)="toggleSidebar()"
+        aria-label="Close sidebar"
+        class="p-2 rounded-lg hover:bg-gray-200 text-gray-600 sm:hidden"
+      >
+        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="space-y-2 font-medium flex-1">
+      @if (isAdmin()) {
+        <li>
+          <a
+            routerLink="/dashboard"
+            routerLinkActive="bg-blue-600 text-white"
+            class="flex items-center px-2 py-1.5 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-gray-900 group no-underline"
+            (click)="closeSidebarOnNav()"
+          >
+            <svg class="shrink-0 w-5 h-5 transition duration-75 text-gray-600 group-hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5ZM4 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-4Z"/>
+            </svg>
+            <span class="ms-3">Dashboard</span>
+          </a>
+        </li>
+      }
+      <li>
+        <a
+          routerLink="/polls"
+          routerLinkActive="bg-blue-600 text-white"
+          class="flex items-center px-2 py-1.5 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-gray-900 group no-underline"
+          (click)="closeSidebarOnNav()"
+        >
+          <svg class="w-5 h-5 transition duration-75 text-gray-600 group-hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"/>
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"/>
+          </svg>
+          <span class="ms-3">Polls</span>
+        </a>
+      </li>
+      @if (isAdmin()) {
+        <li>
+          <a
+            routerLink="/admin/users"
+            routerLinkActive="bg-blue-600 text-white"
+            class="flex items-center px-2 py-1.5 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-gray-900 group no-underline"
+            (click)="closeSidebarOnNav()"
+          >
+            <svg class="shrink-0 w-5 h-5 transition duration-75 text-gray-600 group-hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
+            <span class="ms-3">Users</span>
+          </a>
+        </li>
+        <li>
+          <a
+            routerLink="/admin/polls"
+            routerLinkActive="bg-blue-600 text-white"
+            class="flex items-center px-2 py-1.5 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-gray-900 group no-underline"
+            (click)="closeSidebarOnNav()"
+          >
+            <svg class="shrink-0 w-5 h-5 transition duration-75 text-gray-600 group-hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v14M9 5v14M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/>
+            </svg>
+            <span class="ms-3">Manage polls</span>
+          </a>
+        </li>
+      }
+    </ul>
+
+    <!-- Profile & logout at the end of the sidebar -->
+    <div class="mt-auto pt-4 border-t border-gray-200">
+      <div class="p-2">
+        <div class="flex items-center px-2.5 py-2 space-x-1.5 text-sm bg-gray-200 rounded-lg">
+          <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 text-sm font-medium shrink-0">
+            {{ user()?.name?.charAt(0) || '?' }}{{ user()?.lastName?.charAt(0) || '' }}
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <div class="font-medium text-gray-800 truncate">{{ user()?.name }} {{ user()?.lastName }}</div>
+            <div class="truncate text-gray-600 text-xs">{{ user()?.email || '—' }}</div>
+          </div>
+          @if (user()?.role) {
+            <span class="bg-blue-600 text-white text-xs font-medium px-1.5 py-0.5 rounded shrink-0">{{ user()?.role }}</span>
+          }
+        </div>
+      </div>
+      <ul class="px-2 pb-2 text-sm text-gray-700 font-medium space-y-0.5">
+        <li>
+          <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-200 hover:text-gray-900 rounded no-underline" (click)="closeSidebarOnNav(); $event.preventDefault()">
+            <svg class="w-4 h-4 me-1.5 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
+            Profile
+          </a>
+        </li>
+        <li class="border-t border-gray-200 pt-1.5 mt-1.5">
+          <button
+            type="button"
+            (click)="logout()"
+            class="inline-flex items-center w-full p-2 text-red-600 hover:bg-gray-200 hover:text-red-700 rounded cursor-pointer border-0 bg-transparent text-left font-inherit"
+          >
+            <svg class="w-4 h-4 me-1.5 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
+            </svg>
+            Sign out
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</aside>
+
+<!-- Overlay on mobile when sidebar open -->
+@if (sidebarOpen()) {
+  <div
+    class="fixed inset-0 bg-black/50 z-30 sm:hidden"
+    (click)="toggleSidebar()"
+    aria-hidden="true"
+  ></div>
+}
+
+<!-- Main content -->
+<div class="p-4 sm:ml-64 min-h-screen flex flex-col">
+  <header class="flex items-center justify-between h-14 px-4 lg:px-6 bg-white border-b border-slate-200 shadow-sm rounded-lg mb-4 -mx-1 sm:mx-0">
+    <div class="flex items-center gap-2">
+      <!-- Spacer on mobile so content isn't under the hamburger; hamburger is in fixed position -->
+      <span class="w-10 h-10 sm:hidden inline-block" aria-hidden="true"></span>
+      <h1 class="text-lg font-semibold text-slate-800">Soundage</h1>
+    </div>
+  </header>
+  <main class="flex-1 overflow-auto">
+    <router-outlet />
+  </main>
+</div>

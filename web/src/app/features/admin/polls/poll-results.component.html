@@ -1,0 +1,179 @@
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6">
+    <a
+      [routerLink]="['/admin/polls']"
+      class="text-sm font-medium text-slate-600 hover:text-blue-600"
+    >
+      ← Back to polls
+    </a>
+  </div>
+
+  @if (loading) {
+    <div class="rounded-xl border border-slate-200 bg-white p-8 animate-pulse space-y-6">
+      <div class="h-8 bg-slate-200 rounded w-2/3"></div>
+      <div class="h-4 bg-slate-100 rounded w-full"></div>
+      <div class="h-24 bg-slate-100 rounded"></div>
+    </div>
+  } @else if (error) {
+    <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
+      {{ error }}
+    </div>
+  } @else if (results; as r) {
+    <!-- Summary header -->
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+      <div class="p-6 border-b border-slate-200 bg-slate-50">
+        <h1 class="text-2xl font-semibold text-slate-900">{{ r.pollTitle }}</h1>
+        <div class="mt-3 flex flex-wrap items-center gap-4">
+          <p class="text-slate-700">
+            <span class="text-2xl font-bold text-blue-600">{{ r.totalResponses }}</span>
+            <span class="ml-1">{{ r.totalResponses === 1 ? 'person voted' : 'people voted' }}</span>
+          </p>
+          @if (r.totalResponses === 0) {
+            <p class="text-sm text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg">
+              No votes yet. Share the poll link so people can vote.
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Who voted: names and emails -->
+    @if (r.voters?.length) {
+      <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+          <h2 class="text-lg font-semibold text-slate-900">Who voted</h2>
+          <p class="text-sm text-slate-500 mt-0.5">Names and emails of everyone who submitted a response.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="results-table w-full">
+            <thead>
+              <tr>
+                <th class="results-th">#</th>
+                <th class="results-th text-left">Name</th>
+                <th class="results-th text-left">Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of r.voters; track $index) {
+                <tr class="results-tr">
+                  <td class="results-td results-td-num">{{ $index + 1 }}</td>
+                  <td class="results-td">
+                    <span [class.text-slate-500]="v.anonymous">{{ v.displayName }}</span>
+                  </td>
+                  <td class="results-td">
+                    @if (v.anonymous) {
+                      <span class="text-slate-400 italic">—</span>
+                    } @else {
+                      <a [href]="'mailto:' + v.email" class="text-blue-600 hover:underline">{{ v.email }}</a>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <h2 class="text-lg font-semibold text-slate-800 mb-4">Vote breakdown by question</h2>
+
+    @for (q of r.questionResults; track q.questionId) {
+      <div class="rounded-xl border border-slate-200 bg-white shadow-sm p-6 mb-6">
+        <h3 class="text-lg font-medium text-slate-900 mb-1">{{ q.questionTitle }}</h3>
+        <p class="text-xs text-slate-500 uppercase tracking-wide mb-4">{{ q.type.replace('_', ' ') }}</p>
+
+        <!-- Single / Multiple choice / Yes-No / Image choice: clear count + percentage, no progress bar -->
+        @if (isChoice(q.type) && q.optionCounts?.length) {
+          <div class="result-options" [class.result-options--grid]="hasOptionImages(q.optionCounts)">
+            @for (opt of q.optionCounts; track opt.optionId) {
+              @let isPrimary = opt.percentage >= 50;
+              @let optImageUrl = getOptionImageUrl(opt);
+              <div class="result-option-card" [class.result-option-card--primary]="isPrimary" [class.result-option-card--danger]="!isPrimary">
+                @if (optImageUrl) {
+                  <img [src]="optImageUrl" [alt]="opt.optionLabel" class="result-option-img" loading="lazy" />
+                }
+                <div class="result-option-body">
+                  <span class="result-option-label">{{ opt.optionLabel }}</span>
+                  <span class="result-option-count">{{ opt.count }}</span>
+                  <span class="result-option-unit">{{ opt.count === 1 ? 'vote' : 'votes' }}</span>
+                  <span class="result-option-pct" [class.result-option-pct--primary]="isPrimary" [class.result-option-pct--danger]="!isPrimary">
+                    {{ opt.percentage }}%
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Rating: distribution bars + average -->
+        @if (isRating(q.type) && q.ratingDistribution?.length) {
+          <div class="space-y-4">
+            @if (q.averageRating != null) {
+              <p class="text-sm text-slate-600">
+                Average rating: <span class="font-semibold text-slate-900">{{ q.averageRating }}</span> / 5
+              </p>
+            }
+            <div class="space-y-2">
+              @for (bucket of q.ratingDistribution; track bucket.value) {
+                @let ratingPct = maxRatingCount(q) ? (bucket.count / maxRatingCount(q)) * 100 : 0;
+                @let ratingBarWidth = bucket.count > 0 ? Math.max(ratingPct, 8) : 0;
+                <div class="flex items-center gap-3">
+                  <span class="w-6 text-sm font-medium text-slate-600">{{ bucket.value }}</span>
+                  <div class="flex-1 h-9 min-w-0 bg-slate-200 rounded-lg overflow-hidden" role="img" [attr.aria-label]="'Rating ' + bucket.value + ': ' + bucket.count + ' votes'">
+                    <div
+                      class="bar-fill bg-amber-500 rounded-lg h-full"
+                      [style.width.%]="ratingBarWidth"
+                    ></div>
+                  </div>
+                  <span class="text-sm text-slate-600 w-24 text-right">
+                    <strong class="text-slate-900">{{ bucket.count }}</strong> {{ bucket.count === 1 ? 'vote' : 'votes' }} ({{ bucket.percentage }}%)
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Text / Comments: well-designed cards with author and text -->
+        @if (isText(q.type)) {
+          @if (q.textResponseEntries?.length) {
+            <div class="comments-grid space-y-4">
+              @for (entry of q.textResponseEntries; track $index) {
+                <div class="comment-card">
+                  <div class="comment-card-header">
+                    <span class="comment-author">{{ entry.displayName }}</span>
+                    @if (!entry.anonymous && entry.email) {
+                      <a [href]="'mailto:' + entry.email" class="comment-email">{{ entry.email }}</a>
+                    }
+                    @if (entry.anonymous) {
+                      <span class="comment-anon">Anonymous</span>
+                    }
+                  </div>
+                  <p class="comment-text">{{ entry.text }}</p>
+                </div>
+              }
+            </div>
+          } @else if (q.textResponses?.length) {
+            <ul class="space-y-2 border border-slate-200 rounded-lg divide-y divide-slate-100 overflow-hidden">
+              @for (text of q.textResponses; track $index) {
+                <li class="px-4 py-3 text-sm text-slate-700 bg-slate-50/50">{{ text }}</li>
+              }
+            </ul>
+          } @else {
+            <p class="text-sm text-slate-500 italic">No text responses yet.</p>
+          }
+        }
+
+        @if (!isChoice(q.type) && !isRating(q.type) && !isText(q.type)) {
+          <p class="text-sm text-slate-500 italic">No results for this question type.</p>
+        }
+      </div>
+    }
+
+    @if (r.questionResults.length === 0) {
+      <div class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+        This poll has no questions, so there are no results to show.
+      </div>
+    }
+  }
+</div>

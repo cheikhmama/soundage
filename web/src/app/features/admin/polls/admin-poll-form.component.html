@@ -1,0 +1,251 @@
+<div class="max-w-3xl mx-auto">
+  <div class="mb-6">
+    <a routerLink="/admin/polls" class="text-sm font-medium text-slate-600 hover:text-blue-600">← Back to polls</a>
+    <h1 class="text-2xl font-semibold text-slate-900 mt-2">{{ pollId ? 'Edit poll' : 'Create poll' }}</h1>
+  </div>
+
+  @if (loading) {
+    <div class="rounded-xl border border-slate-200 bg-white p-8 animate-pulse space-y-6">
+      <div class="h-10 bg-slate-200 rounded w-full"></div>
+      <div class="h-24 bg-slate-100 rounded"></div>
+      <div class="h-10 bg-slate-200 rounded w-1/3"></div>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      @if (error) {
+        <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">{{ error }}</div>
+      }
+
+      <div class="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+        <h2 class="text-lg font-medium text-slate-900">Details</h2>
+        <div>
+          <label for="title" class="block text-sm font-medium text-slate-700 mb-1">Title *</label>
+          <input
+            id="title"
+            type="text"
+            formControlName="title"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Poll title"
+          />
+          @if (form.get('title')?.invalid && form.get('title')?.touched) {
+            <span class="text-xs text-red-600 mt-1 block">Title is required.</span>
+          }
+        </div>
+        <div>
+          <label for="description" class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="3"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Optional description"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Date range (optional)</label>
+          <div id="date-range-picker" class="flex flex-wrap items-center gap-2 sm:gap-4">
+            <div class="relative flex-1 min-w-[180px]">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/>
+                </svg>
+              </div>
+              <input
+                id="datepicker-range-start"
+                name="start"
+                type="datetime-local"
+                formControlName="startsAt"
+                class="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                placeholder="Select date start"
+              />
+            </div>
+            <span class="text-slate-500 font-medium">to</span>
+            <div class="relative flex-1 min-w-[180px]">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/>
+                </svg>
+              </div>
+              <input
+                id="datepicker-range-end"
+                name="end"
+                type="datetime-local"
+                formControlName="endsAt"
+                class="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                placeholder="Select date end"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-6">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" formControlName="isActive" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+            <span class="text-sm text-slate-700">Active (open for voting)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" formControlName="allowAnonymous" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+            <span class="text-sm text-slate-700">Allow anonymous voting</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-medium text-slate-900">Questions</h2>
+          <button
+            type="button"
+            (click)="addQuestion()"
+            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
+          >
+            + Add question
+          </button>
+        </div>
+
+        <div formArrayName="questions" class="space-y-6">
+          @for (q of questions.controls; track $index; let qi = $index) {
+            <div [formGroupName]="qi" class="p-4 border border-slate-200 rounded-lg bg-slate-50/50 space-y-4">
+              <div class="flex flex-wrap items-start gap-4">
+                <div class="flex-1 min-w-0">
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Question {{ qi + 1 }}</label>
+                  <input
+                    type="text"
+                    formControlName="title"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Question text"
+                  />
+                </div>
+                <div class="relative flex-shrink-0">
+                  <button
+                    type="button"
+                    (click)="toggleTypeDropdown(qi)"
+                    class="inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 focus:ring-4 focus:ring-slate-200 font-medium rounded-lg text-sm px-4 py-2.5 focus:outline-none min-w-[180px]"
+                  >
+                    {{ getQuestionTypeLabel(questions.at(qi).get('type')?.value) }}
+                    <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  @if (openTypeDropdown() === qi) {
+                    <div class="absolute z-10 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 top-full left-0">
+                      @for (t of questionTypes; track t.value) {
+                        <button
+                          type="button"
+                          (click)="selectQuestionType(qi, t.value)"
+                          class="inline-flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded"
+                        >
+                          {{ t.label }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+                  @if (questions.length > 1) {
+                    <button
+                      type="button"
+                      (click)="removeQuestion(qi)"
+                      class="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      title="Remove question"
+                    >
+                      ✕
+                    </button>
+                  }
+              </div>
+              <div class="flex flex-wrap gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" formControlName="isRequired" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span class="text-sm text-slate-700">Required</span>
+                </label>
+                @if (questions.at(qi).get('type')?.value === 'multiple_choice') {
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" formControlName="allowMultiple" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <span class="text-sm text-slate-700">Allow multiple</span>
+                  </label>
+                }
+              </div>
+              @if (needsOptions(questions.at(qi).get('type')?.value)) {
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <span class="text-sm font-medium text-slate-700">Options</span>
+                    @if (supportsImageOptions(questions.at(qi).get('type')?.value) && !cloudinaryConfigured) {
+                      <span class="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">Set Cloudinary in environment for image upload</span>
+                    }
+                    <button
+                      type="button"
+                      (click)="addOption(qi)"
+                      class="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      + Add option
+                    </button>
+                  </div>
+                  <div [formArrayName]="'options'" class="space-y-3">
+                    @for (opt of optionsOf(qi).controls; track $index; let oi = $index) {
+                      <div [formGroupName]="oi" class="flex flex-wrap items-start gap-2 p-3 border border-slate-200 rounded-lg bg-white">
+                        @if (supportsImageOptions(questions.at(qi).get('type')?.value) && cloudinaryConfigured) {
+                          <div class="flex-shrink-0">
+                            @if (opt.get('imageUrl')?.value) {
+                              <img [src]="opt.get('imageUrl')?.value" alt="Option" class="w-20 h-20 object-cover rounded-lg border border-slate-200" />
+                            } @else {
+                              <div class="w-20 h-20 rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 text-xs">Image</div>
+                            }
+                            <label class="mt-1 block">
+                              <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded cursor-pointer hover:bg-blue-100">
+                                {{ opt.get('imageUrl')?.value ? 'Change' : 'Upload' }} image
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                class="hidden"
+                                (change)="onFileSelected(qi, oi, $event)"
+                                [disabled]="uploadingOption() === qi + '-' + oi"
+                              />
+                            </label>
+                            @if (uploadingOption() === qi + '-' + oi) {
+                              <span class="text-xs text-slate-500">Uploading…</span>
+                            }
+                          </div>
+                        }
+                        <div class="flex-1 min-w-[180px]">
+                          <input
+                            type="text"
+                            formControlName="textContent"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            [placeholder]="questions.at(qi).get('type')?.value === 'image_choice' ? 'Label (e.g. player name)' : 'Option text'"
+                          />
+                        </div>
+                        @if (optionsOf(qi).length > 1) {
+                          <button
+                            type="button"
+                            (click)="removeOption(qi, oi)"
+                            class="p-1.5 text-slate-500 hover:text-red-600 rounded"
+                          >
+                            ✕
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          type="submit"
+          [disabled]="saving"
+          class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {{ saving ? 'Saving…' : (pollId ? 'Update poll' : 'Create poll') }}
+        </button>
+        <a
+          routerLink="/admin/polls"
+          class="inline-flex items-center justify-center px-5 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
+  }
+</div>
