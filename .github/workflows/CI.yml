@@ -18,8 +18,6 @@ jobs:
           POSTGRES_USER: soundage
           POSTGRES_PASSWORD: soundage
           POSTGRES_DB: soundage
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U soundage -d soundage"
           --health-interval 5s
@@ -93,14 +91,7 @@ jobs:
         run: docker-compose up -d
         working-directory: ./api
 
-      # 1️⃣1️⃣ Attendre que l'API soit prête
-      - name: Wait for API
-        run: |
-          echo "Waiting for API to start..."
-          sleep 15
-          curl -f http://localhost:8080/actuator/health || exit 1
-
-      # 1️⃣2️⃣ Nettoyer après tests
+      # 1️⃣1️⃣ Nettoyer après tests
       - name: Stop and remove containers
         run: docker-compose down
         working-directory: ./api
