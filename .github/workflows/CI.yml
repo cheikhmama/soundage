@@ -68,15 +68,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      # 7️⃣ Build les containers Docker
+      # 7️⃣ Build les containers Docker (docker-compose.yml dans api/)
       - name: Build Docker containers
         run: docker-compose build
-        working-directory: ./  # docker-compose.yml à la racine
+        working-directory: ./api
 
       # 8️⃣ Démarrer les services Docker
       - name: Start Docker services
         run: docker-compose up -d
-        working-directory: ./  # docker-compose.yml à la racine
+        working-directory: ./api
 
       # 9️⃣ Attendre que l'API soit prête
       - name: Wait for API
@@ -88,4 +88,4 @@ jobs:
       # 🔟 Nettoyer après tests
       - name: Stop and remove containers
         run: docker-compose down
-        working-directory: ./
+        working-directory: ./api
