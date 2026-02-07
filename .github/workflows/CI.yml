@@ -68,6 +68,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
+          
+      - name: Create db.env file
+        run: |
+              echo "POSTGRES_USER=soundage" >> ./api/db.env
+              echo "POSTGRES_PASSWORD=soundage" >> ./api/db.env
+              echo "POSTGRES_DB=soundage" >> ./api/db.env
+
+
+
       # 7️⃣ Build les containers Docker (docker-compose.yml dans api/)
       - name: Build Docker containers
         run: docker-compose build
