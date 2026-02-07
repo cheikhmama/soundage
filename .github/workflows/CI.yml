@@ -1,6 +1,5 @@
-name: Soundage CI
+name: Soundage CI/CD Pipeline
 
-# Déclenche le workflow à chaque push ou pull request sur main
 on:
   push:
     branches: [ main ]
@@ -9,22 +8,42 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build, Test & Docker
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: soundage
+          POSTGRES_PASSWORD: soundage
+          POSTGRES_DB: soundage
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U soundage -d soundage"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/soundage
+      SPRING_DATASOURCE_USERNAME: soundage
+      SPRING_DATASOURCE_PASSWORD: soundage
+
     steps:
-      # 1️⃣ Récupère le code
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Installer Java
+      # 2️⃣ Installer JDK 21 (pour correspondre au pom.xml)
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      # 3️⃣ Cache Maven local (lié au pom.xml dans api/)
+      # 3️⃣ Cache Maven
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -33,12 +52,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # 4️⃣ Build le projet Maven depuis api/
+      # 4️⃣ Build le projet depuis api/
       - name: Build with Maven
         run: mvn clean install -B
         working-directory: ./api
 
-      # 5️⃣ Run tests depuis api/
+      # 5️⃣ Run tests unitaires et d’intégration
       - name: Run tests
         run: mvn test
         working-directory: ./api
+
+      # 6️⃣ Installer docker-compose pour CD
+      - name: Install docker-compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # 7️⃣ Build les containers Docker
+      - name: Build Docker containers
+        run: docker-compose build
+        working-directory: ./  # docker-compose.yml à la racine
+
+      # 8️⃣ Démarrer les services Docker
+      - name: Start Docker services
+        run: docker-compose up -d
+        working-directory: ./  # docker-compose.yml à la racine
+
+      # 9️⃣ Attendre que l'API soit prête
+      - name: Wait for API
+        run: |
+          echo "Waiting for API to start..."
+          sleep 15
+          curl -f http://localhost:8080/actuator/health || exit 1
+
+      # 🔟 Nettoyer après tests
+      - name: Stop and remove containers
+        run: docker-compose down
+        working-directory: ./
