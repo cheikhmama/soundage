@@ -36,14 +36,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Installer JDK 21 (pour correspondre au pom.xml)
+      # 2️⃣ Installer JDK 21
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      # 3️⃣ Cache Maven
+      # 3️⃣ Cache Maven packages
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -52,7 +52,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # 4️⃣ Build le projet depuis api/
+      # 4️⃣ Build Maven depuis api/
       - name: Build with Maven
         run: mvn clean install -B
         working-directory: ./api
@@ -62,39 +62,45 @@ jobs:
         run: mvn test
         working-directory: ./api
 
-      # 6️⃣ Installer docker-compose pour CD
+      # 6️⃣ Installer docker-compose
       - name: Install docker-compose
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-          
+      # 7️⃣ Créer db.env pour Postgres
       - name: Create db.env file
         run: |
-              echo "POSTGRES_USER=soundage" >> ./api/db.env
-              echo "POSTGRES_PASSWORD=soundage" >> ./api/db.env
-              echo "POSTGRES_DB=soundage" >> ./api/db.env
+          echo "POSTGRES_USER=soundage" >> ./api/db.env
+          echo "POSTGRES_PASSWORD=soundage" >> ./api/db.env
+          echo "POSTGRES_DB=soundage" >> ./api/db.env
 
+      # 8️⃣ Créer app.env pour l'API
+      - name: Create app.env file
+        run: |
+          echo "SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/soundage" >> ./api/app.env
+          echo "SPRING_DATASOURCE_USERNAME=soundage" >> ./api/app.env
+          echo "SPRING_DATASOURCE_PASSWORD=soundage" >> ./api/app.env
+          echo "JWT_SECRET=Zkes5eJpfOFLT+982JhcAnDetKNrgROUhIHmjuRcvzotXgmD5UTbUUl3uP7Nfq9h5XI/JRG7hOjw5Pd2J0bh9w==" >> ./api/app.env
 
-
-      # 7️⃣ Build les containers Docker (docker-compose.yml dans api/)
+      # 9️⃣ Build Docker containers (docker-compose.yml dans api/)
       - name: Build Docker containers
         run: docker-compose build
         working-directory: ./api
 
-      # 8️⃣ Démarrer les services Docker
+      # 🔟 Démarrer les services Docker
       - name: Start Docker services
         run: docker-compose up -d
         working-directory: ./api
 
-      # 9️⃣ Attendre que l'API soit prête
+      # 1️⃣1️⃣ Attendre que l'API soit prête
       - name: Wait for API
         run: |
           echo "Waiting for API to start..."
           sleep 15
           curl -f http://localhost:8080/actuator/health || exit 1
 
-      # 🔟 Nettoyer après tests
+      # 1️⃣2️⃣ Nettoyer après tests
       - name: Stop and remove containers
         run: docker-compose down
         working-directory: ./api
